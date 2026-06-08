@@ -1,4 +1,3 @@
-# app/services/payment_service.py
 from app.integrations.stripe import StripeClient
 from app.schemas.payments import PaymentLinkCreate, PaymentLinkResponse
 
@@ -13,6 +12,10 @@ class PaymentService:
             amount_cents=payload.amount_cents,
             currency=payload.currency,
             customer_email=payload.customer_email,
+            metadata={
+                "order_id": payload.order_id,
+                "customer_email": payload.customer_email,
+            },
         )
         return PaymentLinkResponse(
             payment_link_id=result["id"],
@@ -20,4 +23,19 @@ class PaymentService:
         )
 
     async def handle_stripe_event(self, event: dict) -> dict:
-        return {"success": True, "received": True, "event_type": event.get("type")}
+        event_type = event.get("type")
+
+        if event_type == "checkout.session.completed":
+            return {
+                "success": True,
+                "received": True,
+                "event_type": event_type,
+                "action": "mark_order_as_paid",
+            }
+
+        return {
+            "success": True,
+            "received": True,
+            "event_type": event_type,
+            "action": "ignored",
+        }

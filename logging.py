@@ -1,23 +1,79 @@
-# tests/api/test_payment_links.py
-def test_create_payment_link(client, api_headers):
-    payload = {
-        "order_id": "order_test_001",
-        "product_name": "Audit IA express",
-        "amount_cents": 20000,
-        "currency": "eur",
-        "customer_email": "jean@example.com"
+import logging
+import logging.config
+from pathlib import Path
+from typing import Union
+
+
+LOG_DIR = Path("logs")
+LOG_DIR.mkdir(parents=True, exist_ok=True)
+
+DEFAULT_LOG_LEVEL = "INFO"
+DEFAULT_LOG_FILE = LOG_DIR / "app.log"
+
+
+def build_logging_config(
+    log_level: str = DEFAULT_LOG_LEVEL,
+    log_file: Union[str, Path] = DEFAULT_LOG_FILE,
+) -> dict:
+    return {
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "standard": {
+                "format": "%(asctime)s | %(levelname)s | %(name)s | %(message)s",
+            },
+            "detailed": {
+                "format": "%(asctime)s | %(levelname)s | %(name)s | %(filename)s:%(lineno)d | %(message)s",
+            },
+        },
+        "handlers": {
+            "console": {
+                "class": "logging.StreamHandler",
+                "level": log_level,
+                "formatter": "standard",
+            },
+            "file": {
+                "class": "logging.handlers.RotatingFileHandler",
+                "level": log_level,
+                "formatter": "detailed",
+                "filename": str(log_file),
+                "maxBytes": 2_000_000,
+                "backupCount": 5,
+                "encoding": "utf-8",
+            },
+        },
+        "loggers": {
+            "app": {
+                "handlers": ["console", "file"],
+                "level": log_level,
+                "propagate": False,
+            },
+            "uvicorn": {
+                "handlers": ["console", "file"],
+                "level": log_level,
+                "propagate": False,
+            },
+            "uvicorn.error": {
+                "handlers": ["console", "file"],
+                "level": log_level,
+                "propagate": False,
+            },
+            "uvicorn.access": {
+                "handlers": ["console", "file"],
+                "level": log_level,
+                "propagate": False,
+            },
+        },
+        "root": {
+            "handlers": ["console", "file"],
+            "level": log_level,
+        },
     }
 
-    response = client.post(
-        "/api/v1/payment-links",
-        json=payload,
-        headers=api_headers,
-    )
 
-    assert response.status_code == 201
+def setup_logging(log_level: str = DEFAULT_LOG_LEVEL) -> None:
+    logging.config.dictConfig(build_logging_config(log_level=log_level))
 
-    data = response.json()
-    assert data["success"] is True
-    assert data["payment_link_id"].startswith("plink_")
-    assert data["url"].startswith("https://")
-    assert data["message"] == "Lien de paiement créé"
+
+def get_logger(name: str = "app") -> logging.Logger:
+    return logging.getLogger(name)
