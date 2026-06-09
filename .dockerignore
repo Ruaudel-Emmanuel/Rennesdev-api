@@ -1,0 +1,48 @@
+# VCS
+.git
+.gitignore
+
+# Python cache / test artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.tox/
+.nox/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Local env / secrets
+.env
+.env.*
+!.env.example
+
+# Logs / runtime data
+logs/
+storage/
+*.log
+
+# IDE / OS junk
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Local backups / temp
+_backup_before_repair/
+tmp/
+temp/
+
+# Docker files not needed in image context
+docker-compose.yml
+
+# Tests can be excluded from production image build context
+tests/
